@@ -7,6 +7,8 @@ import { Artwork } from '@/components/ui';
 import { ProgressBar } from './ProgressBar';
 import { TransportControls } from './PlayerControls';
 import { QueuePanel } from './QueuePanel';
+import { providerFor } from '@/services/providers';
+import { sourceUrlFor } from '@/utils/entity';
 
 export function FullPlayer({ onClose }: { onClose: () => void }) {
   const player = usePlayer();
@@ -104,16 +106,19 @@ export function FullPlayer({ onClose }: { onClose: () => void }) {
             <TransportControls size="lg" />
           </div>
           {player.error && <p className="text-center text-sm text-red-300">{player.error}</p>}
-          {track.licenseUrl && (
-            <a
-              href={track.licenseUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="block text-center text-[11px] text-muted/70 hover:text-muted"
-            >
-              Licenza del brano
-            </a>
-          )}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted/70">
+            <span>Musica di {track.artist.name}, fornita da {providerFor(track).label.split(' (')[0]}</span>
+            {sourceUrlFor(track) && (
+              <a href={sourceUrlFor(track)!} target="_blank" rel="noreferrer noopener" className="hover:text-muted underline">
+                Pagina originale
+              </a>
+            )}
+            {track.licenseUrl && (
+              <a href={track.licenseUrl} target="_blank" rel="noreferrer noopener" className="hover:text-muted underline">
+                Licenza
+              </a>
+            )}
+          </div>
         </div>
       </div>
 

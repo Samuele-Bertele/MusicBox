@@ -43,6 +43,12 @@ Campi rilevanti del brano: `audio` (URL MP3 diretto), `audiodownload_allowed`
 (booleano: se è falso il download **non** va offerto), `license_ccurl`,
 `album_image`, `musicinfo.tags.genres`.
 
+**Obblighi dei termini d'uso, rispettati dall'app:** uso non commerciale;
+credito all'artista e a Jamendo come fornitore; link diretto da ogni brano alla
+sua pagina su jamendo.com (player a schermo intero e voce "Apri pagina
+originale" nel menu di ogni brano); nessuna cache dell'audio e nessun accesso
+offline; la parola "jamendo" non compare nel nome dell'app.
+
 **Nessun metodo di scrittura viene usato**, quindi nessun OAuth, nessun secret,
 nessun token da proteggere.
 

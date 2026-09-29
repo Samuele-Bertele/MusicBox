@@ -1,0 +1,32 @@
+AGGIORNAMENTO — 9 file da sovrascrivere nel progetto
+====================================================
+
+Contiene solo i file che nel repository GitHub sono vecchi o mancanti:
+
+  .gitignore                              MANCANTE nel repo
+  .env.example                            MANCANTE nel repo
+  API.md                                  aggiornato
+  src/types/index.ts                      aggiornato
+  src/utils/entity.ts                     aggiornato
+  src/services/providers/jamendo.ts       aggiornato
+  src/services/providers/archive.ts       aggiornato
+  src/components/TrackRow.tsx             aggiornato
+  src/player/FullPlayer.tsx               aggiornato
+
+COME APPLICARLO
+
+1. In Esplora File attiva Visualizza > Mostra > Elementi nascosti,
+   altrimenti .gitignore e .env.example non vengono copiati.
+2. Copia il contenuto della cartella "aggiornamento" dentro la cartella
+   del progetto, sovrascrivendo i file esistenti.
+3. Cancella questo LEGGIMI.txt dalla cartella del progetto.
+4. Dal terminale, nella cartella del progetto:
+
+     git rm --cached tsconfig.tsbuildinfo
+     git add -A
+     git commit -m "Attribuzione catalogo e file di configurazione mancanti"
+     git push
+
+VERIFICA
+   git status   deve essere pulito dopo il push
+   npm run build && npm test   devono passare (37 test verdi)

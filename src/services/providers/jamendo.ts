@@ -40,6 +40,7 @@ interface JamendoTrack {
   audiodownload?: string;
   audiodownload_allowed?: boolean;
   license_ccurl?: string;
+  shareurl?: string;
   releasedate?: string;
   musicinfo?: { tags?: { genres?: string[] } };
 }
@@ -136,6 +137,7 @@ export class JamendoProvider implements MusicProvider {
     streamUrl: t.audio || null,
     downloadAllowed: Boolean(t.audiodownload_allowed && t.audiodownload),
     licenseUrl: t.license_ccurl || null,
+    sourceUrl: t.shareurl || `https://www.jamendo.com/track/${t.id}`,
     genres: t.musicinfo?.tags?.genres ?? [],
     releaseDate: t.releasedate || null,
   });

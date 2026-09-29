@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Disc3, Heart, ListPlus, MoreHorizontal, Play, Plus, Trash2, User } from 'lucide-react';
+import { Disc3, ExternalLink, Heart, ListPlus, MoreHorizontal, Play, Plus, Trash2, User } from 'lucide-react';
 import type { Track } from '@/types';
 import { formatDuration } from '@/utils/format';
+import { sourceUrlFor } from '@/utils/entity';
 import { useLibrary } from '@/services/LibraryProvider';
 import { usePlayer } from '@/player/PlayerProvider';
 import { ContextMenu, useContextMenu, type MenuItem } from './ContextMenu';
@@ -46,6 +47,14 @@ export function TrackRow({ track, index, tracks, contextLabel, showArtwork = tru
   ];
   if (track.album) {
     items.push({ label: "Vai all'album", icon: <Disc3 />, onSelect: () => navigate(`/album/${encodeURIComponent(track.album!.id)}`) });
+  }
+  const original = sourceUrlFor(track);
+  if (original) {
+    items.push({
+      label: 'Apri pagina originale',
+      icon: <ExternalLink />,
+      onSelect: () => window.open(original, '_blank', 'noopener,noreferrer'),
+    });
   }
   if (onRemove) items.push({ label: 'Rimuovi', icon: <Trash2 />, onSelect: onRemove, danger: true });
 

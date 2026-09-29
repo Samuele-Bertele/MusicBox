@@ -21,6 +21,8 @@ export interface Track {
   /** True only when the rights holder explicitly allows offline copies. */
   downloadAllowed: boolean;
   licenseUrl: string | null;
+  /** Page of the track on the source catalogue (attribution backlink). */
+  sourceUrl?: string | null;
   genres: string[];
   releaseDate: string | null;
 }

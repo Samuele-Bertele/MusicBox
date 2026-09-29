@@ -121,6 +121,7 @@ export class ArchiveProvider implements MusicProvider {
         streamUrl: `${DOWNLOAD}/${encodeURIComponent(id)}/${encodeURIComponent(f.name)}`,
         downloadAllowed: false,
         licenseUrl: license,
+        sourceUrl: `https://archive.org/details/${encodeURIComponent(id)}`,
         genres,
         releaseDate: meta.metadata?.date ?? null,
       }));
