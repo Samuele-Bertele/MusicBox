@@ -16,6 +16,74 @@ const dedupe = (tracks: Track[]) => {
 
 const playable = (tracks: Track[]) => tracks.filter((t) => Boolean(t.streamUrl));
 
+/**
+ * Emits each shelf as soon as it is ready instead of awaiting all of them.
+ * The Home used to wait for every catalogue call before painting anything,
+ * which on a slow connection meant several seconds of skeletons.
+ */
+export async function streamShelves(
+  { history, liked, personalized }: PersonalShelvesInput,
+  onShelf: (shelf: Shelf) => void,
+): Promise<void> {
+  const profile = buildTasteProfile(history, liked);
+  const hasTaste = personalized && (history.length > 0 || liked.length > 0);
+  let emitted = 0;
+
+  const emit = (shelf: Shelf) => {
+    if (!shelf.tracks.length) return;
+    emitted++;
+    onShelf(shelf);
+  };
+
+  if (hasTaste) {
+    const genres = topGenres(profile, 4);
+    const artistIds = topArtistIds(profile, 4);
+    const known = new Set([...profile.recentTrackIds, ...profile.likedTrackIds]);
+
+    const recommended = await withFallback(
+      (p) => p.getRecommendations({ genres, artistIds }, { limit: 30 }),
+      (v) => v.length === 0,
+    ).catch(() => null);
+
+    if (recommended) {
+      const fresh = rankTracks(playable(dedupe(recommended.value)).filter((t) => !known.has(t.id)), profile);
+      emit({ id: 'for-you', title: 'Consigliati per te', subtitle: genres.slice(0, 3).join(' · '), tracks: fresh.slice(0, 20) });
+      emit({ id: 'discover', title: 'Nuove scoperte', tracks: fresh.slice(20, 40) });
+    }
+
+    const seed = liked[0]?.track ?? history[0]?.track;
+    const seedGenre = seed?.genres[0] ?? genres[0];
+    if (seed && seedGenre) {
+      const similar = await providerFor(seed)
+        .getTracksByGenre(seedGenre, { limit: 16 })
+        .catch(() => [] as Track[]);
+      emit({
+        id: 'because-you-like',
+        title: `Perché ascolti ${seed.artist.name}`,
+        tracks: rankTracks(playable(similar).filter((t) => t.id !== seed.id), profile).slice(0, 16),
+      });
+    }
+  }
+
+  if (emitted >= 2) return;
+
+  const featured = await withFallback(
+    (p) => p.getFeaturedTracks({ limit: 20 }),
+    (v) => v.length === 0,
+  ).catch(() => null);
+  if (featured) {
+    emit({ id: 'featured', title: 'Popolari questa settimana', subtitle: featured.provider.label, tracks: playable(featured.value) });
+  }
+
+  for (const genre of ['electronic', 'jazz']) {
+    if (emitted >= 3) break;
+    const tracks = await getPrimaryProvider()
+      .getTracksByGenre(genre, { limit: 16 })
+      .catch(() => [] as Track[]);
+    emit({ id: `genre-${genre}`, title: `Da esplorare: ${genre}`, tracks: playable(tracks) });
+  }
+}
+
 /** Content for a brand-new library: nothing personal to work with yet. */
 export async function getGenericShelves(): Promise<Shelf[]> {
   const featured = await withFallback(

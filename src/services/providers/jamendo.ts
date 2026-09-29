@@ -106,13 +106,20 @@ export class JamendoProvider implements MusicProvider {
   }
 
   private async call<T>(path: string, params: Record<string, string | number | undefined>, opts?: SearchOptions & { ttlMs?: number }) {
+    const url = this.url(path, params);
     try {
-      const data = await client.get<JamendoEnvelope<T>>(this.url(path, params), {
+      const data = await client.get<JamendoEnvelope<T>>(url, {
         signal: opts?.signal,
         ttlMs: opts?.ttlMs,
       });
-      if (data.headers?.code === 6) throw new ProviderError('Jamendo rate limit reached', 'rate_limit', this.id);
+      if (data.headers?.code === 6) {
+        // A rate-limited envelope arrives as HTTP 200, so it would otherwise
+        // sit in the cache and keep failing for the whole TTL.
+        client.cacheRef.delete(url);
+        throw new ProviderError('Jamendo rate limit reached', 'rate_limit', this.id);
+      }
       if (data.headers?.status === 'failed') {
+        client.cacheRef.delete(url);
         throw new ProviderError(data.headers.error_message || 'Jamendo request failed', 'unknown', this.id);
       }
       return data.results ?? [];

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Disc3, ExternalLink, Heart, ListPlus, MoreHorizontal, Play, Plus, Trash2, User } from 'lucide-react';
+import { Heart, MoreHorizontal, Play } from 'lucide-react';
 import type { Track } from '@/types';
 import { formatDuration } from '@/utils/format';
-import { sourceUrlFor } from '@/utils/entity';
 import { useLibrary } from '@/services/LibraryProvider';
 import { usePlayer } from '@/player/PlayerProvider';
-import { ContextMenu, useContextMenu, type MenuItem } from './ContextMenu';
+import { ContextMenu, useContextMenu } from './ContextMenu';
+import { useTrackActions } from './trackActions';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
 import { Artwork } from './ui';
 
@@ -37,26 +37,7 @@ export function TrackRow({ track, index, tracks, contextLabel, showArtwork = tru
     player.playTracks(list, at, contextLabel);
   };
 
-  const items: MenuItem[] = [
-    { label: 'Riproduci', icon: <Play />, onSelect: play, disabled: unavailable },
-    { label: 'Riproduci dopo', icon: <ListPlus />, onSelect: () => player.playNext([track]), disabled: unavailable },
-    { label: 'Aggiungi alla coda', icon: <Plus />, onSelect: () => player.addToQueue([track]), disabled: unavailable },
-    { label: 'Aggiungi a playlist', icon: <ListPlus />, onSelect: () => setAddOpen(true) },
-    { label: isLiked ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti', icon: <Heart />, onSelect: () => void toggleLike(track) },
-    { label: "Vai all'artista", icon: <User />, onSelect: () => navigate(`/artist/${encodeURIComponent(track.artist.id)}`) },
-  ];
-  if (track.album) {
-    items.push({ label: "Vai all'album", icon: <Disc3 />, onSelect: () => navigate(`/album/${encodeURIComponent(track.album!.id)}`) });
-  }
-  const original = sourceUrlFor(track);
-  if (original) {
-    items.push({
-      label: 'Apri pagina originale',
-      icon: <ExternalLink />,
-      onSelect: () => window.open(original, '_blank', 'noopener,noreferrer'),
-    });
-  }
-  if (onRemove) items.push({ label: 'Rimuovi', icon: <Trash2 />, onSelect: onRemove, danger: true });
+  const items = useTrackActions({ track, tracks, contextLabel, onAddToPlaylist: () => setAddOpen(true), onRemove });
 
   return (
     <>

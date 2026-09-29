@@ -1,32 +1,35 @@
-AGGIORNAMENTO — 9 file da sovrascrivere nel progetto
-====================================================
+AGGIORNAMENTO 2 — ricerca, velocità e comandi sul brano
+=======================================================
 
-Contiene solo i file che nel repository GitHub sono vecchi o mancanti:
+12 file, tutti dentro src/. Nessun file nuovo da configurare,
+nessuna variabile d'ambiente da aggiungere.
 
-  .gitignore                              MANCANTE nel repo
-  .env.example                            MANCANTE nel repo
-  API.md                                  aggiornato
-  src/types/index.ts                      aggiornato
-  src/utils/entity.ts                     aggiornato
-  src/services/providers/jamendo.ts       aggiornato
-  src/services/providers/archive.ts       aggiornato
-  src/components/TrackRow.tsx             aggiornato
-  src/player/FullPlayer.tsx               aggiornato
+NUOVI
+  src/utils/relevance.ts                  filtro di pertinenza della ricerca
+  src/components/trackActions.tsx         azioni condivise sul brano
+  src/services/__tests__/relevance.test.ts  7 test nuovi
+
+MODIFICATI
+  src/pages/SearchPage.tsx                risultati progressivi + filtro
+  src/pages/HomePage.tsx                  scaffali che compaiono uno alla volta
+  src/services/recommendations.ts         streamShelves()
+  src/services/providers/jamendo.ts       niente cache degli errori
+  src/services/providers/archive.ts       meno chiamate per ricerca
+  src/services/http/client.ts             TtlCache.delete()
+  src/components/TrackRow.tsx             usa le azioni condivise
+  src/player/FullPlayer.tsx               pulsante playlist + menu azioni
+  src/main.tsx                            storage persistente
 
 COME APPLICARLO
+  Copia il contenuto della cartella "aggiornamento" dentro la cartella del
+  progetto sovrascrivendo, cancella questo LEGGIMI.txt, poi:
 
-1. In Esplora File attiva Visualizza > Mostra > Elementi nascosti,
-   altrimenti .gitignore e .env.example non vengono copiati.
-2. Copia il contenuto della cartella "aggiornamento" dentro la cartella
-   del progetto, sovrascrivendo i file esistenti.
-3. Cancella questo LEGGIMI.txt dalla cartella del progetto.
-4. Dal terminale, nella cartella del progetto:
-
-     git rm --cached tsconfig.tsbuildinfo
      git add -A
-     git commit -m "Attribuzione catalogo e file di configurazione mancanti"
+     git commit -m "Ricerca piu pertinente, caricamento progressivo, azioni sul brano"
      git push
 
+  In alternativa carica i 12 file da github.com con Add file > Upload files.
+
 VERIFICA
-   git status   deve essere pulito dopo il push
-   npm run build && npm test   devono passare (37 test verdi)
+  npm run build   deve passare
+  npm test        44 test verdi

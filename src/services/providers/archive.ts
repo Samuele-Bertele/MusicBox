@@ -128,7 +128,7 @@ export class ArchiveProvider implements MusicProvider {
   }
 
   async searchTracks(query: string, opts?: SearchOptions): Promise<Track[]> {
-    const docs = await this.docs(query, { ...opts, limit: Math.min(opts?.limit ?? 6, 8) });
+    const docs = await this.docs(query, { ...opts, limit: Math.min(opts?.limit ?? 5, 5) });
     const metas = await Promise.all(docs.map((d) => this.item(d.identifier, opts?.signal).catch(() => null)));
     return metas.flatMap((m) => (m ? this.filesToTracks(m).slice(0, 4) : [])).slice(0, opts?.limit ?? 20);
   }

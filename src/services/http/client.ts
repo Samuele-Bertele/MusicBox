@@ -102,6 +102,11 @@ export class TtlCache {
     this.persist();
   }
 
+  delete(key: string) {
+    this.map.delete(key);
+    this.persist();
+  }
+
   clear() {
     this.map.clear();
     if (this.persistKey) localStorage.removeItem(this.persistKey);

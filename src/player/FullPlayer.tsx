@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Heart, ListMusic } from 'lucide-react';
+import { ChevronDown, Heart, ListMusic, ListPlus, MoreHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlayer } from './PlayerProvider';
 import { useLibrary } from '@/services/LibraryProvider';
@@ -7,6 +7,9 @@ import { Artwork } from '@/components/ui';
 import { ProgressBar } from './ProgressBar';
 import { TransportControls } from './PlayerControls';
 import { QueuePanel } from './QueuePanel';
+import { ContextMenu, useContextMenu } from '@/components/ContextMenu';
+import { useTrackActions } from '@/components/trackActions';
+import { AddToPlaylistModal } from '@/components/AddToPlaylistModal';
 import { providerFor } from '@/services/providers';
 import { sourceUrlFor } from '@/utils/entity';
 
@@ -14,6 +17,8 @@ export function FullPlayer({ onClose }: { onClose: () => void }) {
   const player = usePlayer();
   const { likedIds, toggleLike } = useLibrary();
   const [queueOpen, setQueueOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const menu = useContextMenu();
   const startY = useRef<number | null>(null);
   const [dragY, setDragY] = useState(0);
 
@@ -25,6 +30,12 @@ export function FullPlayer({ onClose }: { onClose: () => void }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const actions = useTrackActions({
+    track,
+    onAddToPlaylist: () => setAddOpen(true),
+    includePlay: false,
+  });
 
   if (!track) return null;
 
@@ -91,13 +102,26 @@ export function FullPlayer({ onClose }: { onClose: () => void }) {
               </Link>
             )}
           </div>
-          <button
-            className={`icon-btn h-11 w-11 ${isLiked ? 'text-accent' : ''}`}
-            onClick={() => void toggleLike(track)}
-            aria-label={isLiked ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
-          >
-            <Heart className={`h-6 w-6 ${isLiked ? 'fill-current' : ''}`} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              className="icon-btn h-11 w-11"
+              onClick={() => setAddOpen(true)}
+              aria-label="Aggiungi a playlist"
+              title="Aggiungi a playlist"
+            >
+              <ListPlus className="h-6 w-6" />
+            </button>
+            <button
+              className={`icon-btn h-11 w-11 ${isLiked ? 'text-accent' : ''}`}
+              onClick={() => void toggleLike(track)}
+              aria-label={isLiked ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
+            >
+              <Heart className={`h-6 w-6 ${isLiked ? 'fill-current' : ''}`} />
+            </button>
+            <button className="icon-btn h-11 w-11" onClick={menu.open} aria-label="Altre azioni">
+              <MoreHorizontal className="h-6 w-6" />
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -123,6 +147,8 @@ export function FullPlayer({ onClose }: { onClose: () => void }) {
       </div>
 
       {queueOpen && <QueuePanel onClose={() => setQueueOpen(false)} />}
+      <ContextMenu anchor={menu.anchor} items={actions} onClose={menu.close} />
+      <AddToPlaylistModal tracks={[track]} open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

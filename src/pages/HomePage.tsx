@@ -4,7 +4,7 @@ import { Clock, Heart, Shuffle } from 'lucide-react';
 import type { Track } from '@/types';
 import { useLibrary } from '@/services/LibraryProvider';
 import { usePlayer } from '@/player/PlayerProvider';
-import { getPersonalShelves, type Shelf as ShelfData } from '@/services/recommendations';
+import { streamShelves, type Shelf as ShelfData } from '@/services/recommendations';
 import { smartShuffle } from '@/services/shuffle';
 import { Shelf, TrackCard, PlaylistCard } from '@/components/cards';
 import { ErrorState, ShelfSkeleton, Artwork } from '@/components/ui';
@@ -20,17 +20,21 @@ function greeting(now = new Date()): string {
 export function HomePage() {
   const { history, liked, playlists, settings, profile } = useLibrary();
   const player = usePlayer();
-  const [shelves, setShelves] = useState<ShelfData[] | null>(null);
+  const [shelves, setShelves] = useState<ShelfData[]>([]);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    setShelves(null);
-    getPersonalShelves({ history, liked, personalized: settings.personalizedRecommendations })
-      .then((res) => !cancelled && setShelves(res.shelves))
-      .catch(() => !cancelled && setError('Il servizio musicale non risponde. Riprova tra qualche secondo.'));
+    setShelves([]);
+    setDone(false);
+    streamShelves({ history, liked, personalized: settings.personalizedRecommendations }, (shelf) => {
+      if (!cancelled) setShelves((prev) => (prev.some((s) => s.id === shelf.id) ? prev : [...prev, shelf]));
+    })
+      .catch(() => !cancelled && setError('Il servizio musicale non risponde. Riprova tra qualche secondo.'))
+      .finally(() => !cancelled && setDone(true));
     return () => {
       cancelled = true;
     };
@@ -63,7 +67,7 @@ export function HomePage() {
   }, [history]);
 
   const weeklyMix = useMemo(() => {
-    const pool = shelves?.find((s) => s.id === 'for-you')?.tracks ?? shelves?.[0]?.tracks ?? [];
+    const pool = shelves.find((s) => s.id === 'for-you')?.tracks ?? shelves[0]?.tracks ?? [];
     return smartShuffle(pool, { likedTrackIds: new Set(liked.map((l) => l.trackId)), seed: 1 }).slice(0, 20);
   }, [shelves, liked]);
 
@@ -112,25 +116,19 @@ export function HomePage() {
         </Shelf>
       )}
 
-      {shelves === null && !error ? (
-        <div className="space-y-9">
-          <section className="space-y-3">
-            <div className="h-6 w-48 skeleton rounded" />
-            <ShelfSkeleton />
-          </section>
-          <section className="space-y-3">
-            <div className="h-6 w-40 skeleton rounded" />
-            <ShelfSkeleton />
-          </section>
-        </div>
-      ) : (
-        shelves?.map((shelf) => (
-          <Shelf key={shelf.id} title={shelf.title} subtitle={shelf.subtitle}>
-            {shelf.tracks.map((t, i) => (
-              <TrackCard key={t.id} track={t} onPlay={() => player.playTracks(shelf.tracks, i, shelf.title)} />
-            ))}
-          </Shelf>
-        ))
+      {shelves.map((shelf) => (
+        <Shelf key={shelf.id} title={shelf.title} subtitle={shelf.subtitle}>
+          {shelf.tracks.map((t, i) => (
+            <TrackCard key={t.id} track={t} onPlay={() => player.playTracks(shelf.tracks, i, shelf.title)} />
+          ))}
+        </Shelf>
+      ))}
+
+      {!done && !error && (
+        <section className="space-y-3">
+          <div className="h-6 w-48 skeleton rounded" />
+          <ShelfSkeleton />
+        </section>
       )}
 
       {mostPlayed.length > 0 && (
